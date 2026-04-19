@@ -39,17 +39,25 @@ void tirmanma(void){
 }
 
 void arama(void){
+	if(dikey_hiz > 30.0f){
+		ucusDurumu = FAZ_ARAYIS;
+	}
+}
+
+void drogueAcma(void){
 	if(dikey_hiz < -1.0f){
 		dusus_sayaci++;
 
 		if(dusus_sayaci > 5){
+			HAL_GPIO_WritePin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin, 1); // Drogue paraşütü servosu çalıştı paraşüt atıldı.
+			HAL_GPIO_WritePin(LED_PA4_GPIO_Port, LED_PA4_Pin, 1);
 			ucusDurumu = FAZ_DUSUS;
 	}
 
-	}else if{
-		if((euler.y > 70.0f || euler.y < -70.0f || euler.x > 70.0f || euler.x < -70.0f) && (dikey_hiz < 15.0f)){
-
-		}
+	}else if((euler.y > 70.0f || euler.y < -70.0f || euler.x > 70.0f || euler.x < -70.0f) && (dikey_hiz < 15.0f)){
+		HAL_GPIO_WritePin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin, 1); // Drogue paraşütü servosu çalıştı paraşüt atıldı.
+		HAL_GPIO_WritePin(LED_PA4_GPIO_Port, LED_PA4_Pin, 1);
+		ucusDurumu = FAZ_DUSUS;
 
 	}else{
 		dusus_sayaci=0;
@@ -57,20 +65,17 @@ void arama(void){
 
 }
 
-void hizHesaplama(float filtrelenmis_ivme_z) {
-    // 1. Zaman Farkını (dt) Bul
-    uint32_t guncel_zaman = HAL_GetTick();
-    float dt = (guncel_zaman - eski_zaman) / 1000.0f; // Milisaniyeyi saniyeye çevir
-    gecmis_zaman = guncel_zaman;
+void hizHesaplama(float z_ivme) {
 
-    // İlk açılışta saçma bir süre gelirse pas geç (koruma)
+    uint32_t guncel_zaman = HAL_GetTick();
+    float dt = (guncel_zaman - gecmis_zaman) / 1000.0f;
+    gecmis_zaman = guncel_zaman;
     if (dt > 0.5f) return;
 
-    // 2. İvmeyi Hıza Ekle (İntegral)
-    dikey_hiz += (filtrelenmis_ivme_z * dt);
+    dikey_hiz += (z_ivme * dt);
 }
 
-float ortFiltreleme(float ortGuncel, float ortFiltre) { // Tüm verilerimizin
+float ortFiltreleme(float ortGuncel, float ortFiltre) {
 		ortFiltre = (ortGuncel * 0.1) + (ortFiltre * 0.9);
 	return ortFiltre;
 }

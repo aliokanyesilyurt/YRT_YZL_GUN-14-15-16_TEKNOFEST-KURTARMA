@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "newfunctions.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -168,6 +168,22 @@ void stateMachineTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  switch (ucusDurumu){ // Kurtarma algoritması, fonksiyonlar ve switch-case yapısıyla oluşturuldu.
+		  	  case FAZ_RAMPA: firlatma(); // Rampadan fırlatmayı tespit etme.
+		  	  	  	  	  	  break;
+		  	  case FAZ_FIRLATMA: tirmanma(); // Fırlatmadan burnoutu tespit etme.
+		  	  	  	  	  	  	 break;
+		  	  case FAZ_TIRMANIS: arama(); // Burnout sonrası tepe noktası kilidini açıp aramaya geçme.
+		  	  	  	  	  	     break;
+		  	  case FAZ_ARAYIS: drogueAcma(); // Drogue açmak için apogee tespiti.
+		  		  	  	  	   break;
+		  	  case FAZ_DUSUS: anaParasutAcma(); // Ana paraşüt açma tespiti.
+		  	  	  	  	  	  break;
+			  case FAZ_INIS:  inisKontrol(); // İniş kontrol algoritması ve yedek paraşüt.
+			  	  	  	  	  break;
+			  case FAZ_BITIS: ledYakma(); // İnişin tamamlanmasıyla beraber yapılacaklar.
+			  	  	  	  	  break;
+	  }
     osDelay(1);
   }
   /* USER CODE END stateMachineTask */
