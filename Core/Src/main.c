@@ -111,10 +111,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  veriOkuma();
-	  uartOkuma();
-	  HAL_GPIO_TogglePin(LED_PA5_GPIO_Port, LED_PA5_Pin);
-	  HAL_Delay(1000);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

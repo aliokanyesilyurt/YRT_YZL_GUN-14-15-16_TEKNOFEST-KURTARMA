@@ -6,6 +6,9 @@
 ../Core/Src/newfunctions.c:35:6:tirmanma	2
 ../Core/Src/newfunctions.c:41:6:arama	2
 ../Core/Src/newfunctions.c:47:6:drogueAcma	8
-../Core/Src/newfunctions.c:68:6:hizHesaplama	2
-../Core/Src/newfunctions.c:78:7:ortFiltreleme	1
-../Core/Src/newfunctions.c:83:6:uartOkuma	1
+../Core/Src/newfunctions.c:68:6:anaParasutAcma	1
+../Core/Src/newfunctions.c:73:6:inisKontrol	8
+../Core/Src/newfunctions.c:88:6:ledYakma	1
+../Core/Src/newfunctions.c:92:6:hizHesaplama	2
+../Core/Src/newfunctions.c:102:7:ortFiltreleme	1
+../Core/Src/newfunctions.c:107:6:uartOkuma	1

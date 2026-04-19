@@ -1,5 +1,4 @@
-../Core/Src/freertos.c:96:6:MX_FREERTOS_Init	1
-../Core/Src/freertos.c:147:6:StartDefaultTask	1
-../Core/Src/freertos.c:165:6:stateMachineTask	8
-../Core/Src/freertos.c:199:6:readIMUTask	1
-../Core/Src/freertos.c:217:6:sendUARTTask	1
+../Core/Src/freertos.c:89:6:MX_FREERTOS_Init	1
+../Core/Src/freertos.c:137:6:StartDefaultTask	1
+../Core/Src/freertos.c:156:6:stateMachineTask	8
+../Core/Src/freertos.c:191:6:sendUARTTask	1

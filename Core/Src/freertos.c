@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "newfunctions.h"
+#include "main.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,21 +59,14 @@ const osThreadAttr_t defaultTask_attributes = {
 osThreadId_t stateMachineHandle;
 const osThreadAttr_t stateMachine_attributes = {
   .name = "stateMachine",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
-};
-/* Definitions for readIMU */
-osThreadId_t readIMUHandle;
-const osThreadAttr_t readIMU_attributes = {
-  .name = "readIMU",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* Definitions for sendUART */
 osThreadId_t sendUARTHandle;
 const osThreadAttr_t sendUART_attributes = {
   .name = "sendUART",
-  .stack_size = 128 * 4,
+  .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
 
@@ -83,7 +77,6 @@ const osThreadAttr_t sendUART_attributes = {
 
 void StartDefaultTask(void *argument);
 void stateMachineTask(void *argument);
-void readIMUTask(void *argument);
 void sendUARTTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -121,9 +114,6 @@ void MX_FREERTOS_Init(void) {
   /* creation of stateMachine */
   stateMachineHandle = osThreadNew(stateMachineTask, NULL, &stateMachine_attributes);
 
-  /* creation of readIMU */
-  readIMUHandle = osThreadNew(readIMUTask, NULL, &readIMU_attributes);
-
   /* creation of sendUART */
   sendUARTHandle = osThreadNew(sendUARTTask, NULL, &sendUART_attributes);
 
@@ -150,7 +140,8 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  HAL_GPIO_TogglePin(LED_PA5_GPIO_Port, LED_PA5_Pin);
+    osDelay(1000);
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -168,6 +159,7 @@ void stateMachineTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  veriOkuma();
 	  switch (ucusDurumu){ // Kurtarma algoritması, fonksiyonlar ve switch-case yapısıyla oluşturuldu.
 		  	  case FAZ_RAMPA: firlatma(); // Rampadan fırlatmayı tespit etme.
 		  	  	  	  	  	  break;
@@ -184,27 +176,9 @@ void stateMachineTask(void *argument)
 			  case FAZ_BITIS: ledYakma(); // İnişin tamamlanmasıyla beraber yapılacaklar.
 			  	  	  	  	  break;
 	  }
-    osDelay(1);
+    osDelay(80);
   }
   /* USER CODE END stateMachineTask */
-}
-
-/* USER CODE BEGIN Header_readIMUTask */
-/**
-* @brief Function implementing the readIMU thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_readIMUTask */
-void readIMUTask(void *argument)
-{
-  /* USER CODE BEGIN readIMUTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END readIMUTask */
 }
 
 /* USER CODE BEGIN Header_sendUARTTask */
@@ -220,7 +194,8 @@ void sendUARTTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  uartOkuma();
+    osDelay(100);
   }
   /* USER CODE END sendUARTTask */
 }

@@ -22,24 +22,24 @@ void bno055_delay(int time) {
 
 void veriOkuma(void){
 	euler = bno055_getVectorEuler();
-	ivme = bno055_getVectorAccelerometer();
+	ivme = bno055_getVectorLinearAccel();
 	z_ivme = ortFiltreleme(ivme.z,z_ivme);
 }
 
 void firlatma(void){
-	if(z_ivme > 20.0f){
+	if(z_ivme > 2.0f){
 		ucusDurumu = FAZ_FIRLATMA;
 	}
 }
 
 void tirmanma(void){
-	    if (z_ivme < 2.0f) {
+	    if (z_ivme < 0.5f) {
 	        ucusDurumu = FAZ_TIRMANIS;
 	    }
 }
 
 void arama(void){
-	if(dikey_hiz > 30.0f){
+	if(dikey_hiz > 3.0f){
 		ucusDurumu = FAZ_ARAYIS;
 	}
 }
@@ -54,7 +54,7 @@ void drogueAcma(void){
 			ucusDurumu = FAZ_DUSUS;
 	}
 
-	}else if((euler.y > 70.0f || euler.y < -70.0f || euler.x > 70.0f || euler.x < -70.0f) && (dikey_hiz < 15.0f)){
+	}else if((euler.y > 0.7f || euler.y < -0.7f || euler.x > 0.7f || euler.x < -0.7f) && (dikey_hiz < 0.15f)){
 		HAL_GPIO_WritePin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin, 1); // Drogue paraşütü servosu çalıştı paraşüt atıldı.
 		HAL_GPIO_WritePin(LED_PA4_GPIO_Port, LED_PA4_Pin, 1);
 		ucusDurumu = FAZ_DUSUS;
@@ -63,6 +63,30 @@ void drogueAcma(void){
 		dusus_sayaci=0;
 	}
 
+}
+
+void anaParasutAcma(void){
+	ucusDurumu = FAZ_INIS;
+
+}
+
+void inisKontrol(void) {
+    if (dikey_hiz < -50.0f) {
+        HAL_GPIO_WritePin(YEDEK_PA7_GPIO_Port, YEDEK_PA7_Pin, 1);
+    }
+    if ((z_ivme < 0.1f || z_ivme > -0.1f) && (dikey_hiz < 0.5f || dikey_hiz > -0.5f)) {
+    	uint8_t durma_zamani = 0;
+    	if(durma_zamani == 0){
+    		durma_zamani = HAL_GetTick();
+    	}
+    	if((HAL_GetTick() - durma_zamani) > 5000){
+        ucusDurumu = FAZ_BITIS;
+    	} // İnişin doğruluğunu kontrol edip yedek paraşüt açan fonksiyon.
+    }
+}
+
+void ledYakma(void) {
+		HAL_GPIO_TogglePin(LED_PA6_GPIO_Port, LED_PA6_Pin); // İnince led yakma.
 }
 
 void hizHesaplama(float z_ivme) {
@@ -81,9 +105,9 @@ float ortFiltreleme(float ortGuncel, float ortFiltre) {
 }
 
 void uartOkuma(void){ // UART'a veri aktarmamızı sağlayan fonksiyon bu sayede test yaparken ekranda bu büyüklükleri göreceğiz.
-	char buffer[100];
-	sprintf(buffer, "Euler-> Yaw: %6.1f | Roll: %6.1f | Pitch: %6.1f || Ivme-> X: %6.2f | Y: %6.2f | Z: %6.2f\r\n",
+	char buffer[200];
+	sprintf(buffer, "Euler-> Yaw: %6.1f | Roll: %6.1f | Pitch: %6.1f || Ivme-> X: %6.2f | Y: %6.2f | Z: %6.2f || Faz: %d\r\n",
 	              euler.x, euler.y, euler.z,
-	              ivme.x, ivme.y, ivme.z);
+	              ivme.x, ivme.y, ivme.z, ucusDurumu);
 	HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), 100);
 }
