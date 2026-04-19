@@ -1,0 +1,5 @@
+../Core/Src/newfunctions.c:6:6:bno055_writeData	32	static
+../Core/Src/newfunctions.c:10:6:bno055_readData	32	static
+../Core/Src/newfunctions.c:14:6:bno055_delay	16	static
+../Core/Src/newfunctions.c:18:6:veriOkuma	8	static
+../Core/Src/newfunctions.c:25:6:uartOkuma	192	static
