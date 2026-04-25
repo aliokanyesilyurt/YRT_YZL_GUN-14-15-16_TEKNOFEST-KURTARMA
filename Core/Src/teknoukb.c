@@ -8,7 +8,6 @@ extern float basincFiltre;
 
 TestModlari aktifMod = MOD_UCUS;
 
-uint8_t komut;
 uint16_t durum;
 uint8_t telePaket[36];
 uint8_t fazPaket[6];
@@ -17,7 +16,7 @@ uint8_t header = 0xAA;
 uint8_t footer1 = 0x0D;
 uint8_t footer2 = 0x0A;
 
-void modGuncelle(){
+void modGuncelle(uint8_t komut){
 	if(komut == 0x20) aktifMod = MOD_SIT;
 	else if(komut == 0x22) aktifMod = MOD_SUT;
 	else if(komut == 0x24) aktifMod = MOD_UCUS;

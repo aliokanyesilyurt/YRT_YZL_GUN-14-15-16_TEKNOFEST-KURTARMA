@@ -1,3 +1,3 @@
-../Core/Src/teknoukb.c:20:6:modGuncelle	4	static
-../Core/Src/teknoukb.c:26:6:teleGonder	24	static
-../Core/Src/teknoukb.c:105:6:fazGonder	24	static
+../Core/Src/teknoukb.c:19:6:modGuncelle	16	static
+../Core/Src/teknoukb.c:25:6:teleGonder	24	static
+../Core/Src/teknoukb.c:94:6:fazGonder	24	static

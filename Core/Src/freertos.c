@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "newfunctions.h"
+#include "teknoukb.h"
 #include "main.h"
 /* USER CODE END Includes */
 
@@ -46,7 +47,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+	uint8_t rxBuffer[2];
+	extern uint8_t header;
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -187,7 +189,10 @@ void stateMachineTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  veriOkuma();
+	  if(aktifMod == MOD_UCUS || aktifMod == MOD_SIT) veriOkuma();
+	  else if(aktifMod == MOD_SUT){
+
+	  }
 	  switch (ucusDurumu){ // Kurtarma algoritması, fonksiyonlar ve switch-case yapısıyla oluşturuldu.
 		  	  case FAZ_RAMPA: firlatma(); // Rampadan fırlatmayı tespit etme.
 		  	  	  	  	  	  break;
@@ -222,7 +227,9 @@ void sendTeleTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	 if(aktifMod == MOD_UCUS || aktifMod == MOD_SIT) teleGonder();
+	 else if(aktifMod == MOD_SUT) fazGonder();
+    osDelay(100);
   }
   /* USER CODE END sendTeleTask */
 }
@@ -240,6 +247,12 @@ void orderTeleTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  if(osSemaphoreAcquire(TeleSemHandle, osWaitForever) == osOK){
+		  if(rxBuffer[0] == header){
+			  modGuncelle(rxBuffer[1]);
+		  }
+		  HAL_UART_Receive_IT(&huart2, rxBuffer, 2);
+	  }
     osDelay(1);
   }
   /* USER CODE END orderTeleTask */

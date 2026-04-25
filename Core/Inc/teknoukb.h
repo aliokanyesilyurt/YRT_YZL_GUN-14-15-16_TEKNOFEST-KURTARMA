@@ -15,10 +15,10 @@ typedef union {
 	uint8_t cikan[4];
 } FloatDonusturucu;
 
-void modGuncelle();
+void modGuncelle(uint8_t komut);
 void teleGonder();
 void fazGonder();
 
-extern TestModlari aktifTest;
+extern TestModlari aktifMod;
 
 #endif
