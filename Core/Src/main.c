@@ -22,7 +22,8 @@
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
-
+#include "newfunctions.h"
+#include "teknoukb.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -93,7 +94,11 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_Delay(1000); // BNO055'in uyanması için 1 tam saniye süre veriyoruz!
+  BMP180_Init(&hi2c2);
+  BMP180_SetOversampling(BMP180_STANDARD);
+  BMP180_UpdateCalibrationData();
+
+  HAL_Delay(1000);
   bno055_setup();
   bno055_setOperationModeNDOF();
   /* USER CODE END 2 */

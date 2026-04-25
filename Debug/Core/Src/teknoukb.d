@@ -1,6 +1,5 @@
-Core/Src/newfunctions.o: ../Core/Src/newfunctions.c \
- ../Core/Inc/newfunctions.h ../Core/Inc/main.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
+Core/Src/teknoukb.o: ../Core/Src/teknoukb.c ../Core/Inc/teknoukb.h \
+ ../Core/Inc/main.h ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h \
@@ -30,8 +29,9 @@ Core/Src/newfunctions.o: ../Core/Src/newfunctions.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/bno055.h ../Core/Inc/bmp180_for_stm32_hal.h
-../Core/Inc/newfunctions.h:
+ ../Core/Inc/newfunctions.h ../Core/Inc/bno055.h \
+ ../Core/Inc/bmp180_for_stm32_hal.h
+../Core/Inc/teknoukb.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -63,5 +63,6 @@ Core/Src/newfunctions.o: ../Core/Src/newfunctions.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
+../Core/Inc/newfunctions.h:
 ../Core/Inc/bno055.h:
 ../Core/Inc/bmp180_for_stm32_hal.h:

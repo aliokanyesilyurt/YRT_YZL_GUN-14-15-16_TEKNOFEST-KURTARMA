@@ -1,4 +1,5 @@
-../Core/Src/freertos.c:89:6:MX_FREERTOS_Init	8	static
-../Core/Src/freertos.c:137:6:StartDefaultTask	16	static
-../Core/Src/freertos.c:156:6:stateMachineTask	16	static
-../Core/Src/freertos.c:191:6:sendUARTTask	16	static
+../Core/Src/freertos.c:107:6:MX_FREERTOS_Init	8	static
+../Core/Src/freertos.c:165:6:StartDefaultTask	16	static
+../Core/Src/freertos.c:184:6:stateMachineTask	16	static
+../Core/Src/freertos.c:219:6:sendTeleTask	16	static
+../Core/Src/freertos.c:237:6:orderTeleTask	16	static

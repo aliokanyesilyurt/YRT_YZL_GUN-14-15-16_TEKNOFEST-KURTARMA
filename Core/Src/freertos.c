@@ -60,14 +60,31 @@ osThreadId_t stateMachineHandle;
 const osThreadAttr_t stateMachine_attributes = {
   .name = "stateMachine",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityHigh,
 };
-/* Definitions for sendUART */
-osThreadId_t sendUARTHandle;
-const osThreadAttr_t sendUART_attributes = {
-  .name = "sendUART",
+/* Definitions for sendTele */
+osThreadId_t sendTeleHandle;
+const osThreadAttr_t sendTele_attributes = {
+  .name = "sendTele",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for orderTele */
+osThreadId_t orderTeleHandle;
+const osThreadAttr_t orderTele_attributes = {
+  .name = "orderTele",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityRealtime,
+};
+/* Definitions for SensorMutex */
+osMutexId_t SensorMutexHandle;
+const osMutexAttr_t SensorMutex_attributes = {
+  .name = "SensorMutex"
+};
+/* Definitions for TeleSem */
+osSemaphoreId_t TeleSemHandle;
+const osSemaphoreAttr_t TeleSem_attributes = {
+  .name = "TeleSem"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -77,7 +94,8 @@ const osThreadAttr_t sendUART_attributes = {
 
 void StartDefaultTask(void *argument);
 void stateMachineTask(void *argument);
-void sendUARTTask(void *argument);
+void sendTeleTask(void *argument);
+void orderTeleTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -90,10 +108,17 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
+  /* Create the mutex(es) */
+  /* creation of SensorMutex */
+  SensorMutexHandle = osMutexNew(&SensorMutex_attributes);
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
+
+  /* Create the semaphores(s) */
+  /* creation of TeleSem */
+  TeleSemHandle = osSemaphoreNew(1, 1, &TeleSem_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
@@ -114,8 +139,11 @@ void MX_FREERTOS_Init(void) {
   /* creation of stateMachine */
   stateMachineHandle = osThreadNew(stateMachineTask, NULL, &stateMachine_attributes);
 
-  /* creation of sendUART */
-  sendUARTHandle = osThreadNew(sendUARTTask, NULL, &sendUART_attributes);
+  /* creation of sendTele */
+  sendTeleHandle = osThreadNew(sendTeleTask, NULL, &sendTele_attributes);
+
+  /* creation of orderTele */
+  orderTeleHandle = osThreadNew(orderTeleTask, NULL, &orderTele_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -181,23 +209,40 @@ void stateMachineTask(void *argument)
   /* USER CODE END stateMachineTask */
 }
 
-/* USER CODE BEGIN Header_sendUARTTask */
+/* USER CODE BEGIN Header_sendTeleTask */
 /**
-* @brief Function implementing the sendUART thread.
+* @brief Function implementing the sendTele thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_sendUARTTask */
-void sendUARTTask(void *argument)
+/* USER CODE END Header_sendTeleTask */
+void sendTeleTask(void *argument)
 {
-  /* USER CODE BEGIN sendUARTTask */
+  /* USER CODE BEGIN sendTeleTask */
   /* Infinite loop */
   for(;;)
   {
-	  uartOkuma();
-    osDelay(100);
+    osDelay(1);
   }
-  /* USER CODE END sendUARTTask */
+  /* USER CODE END sendTeleTask */
+}
+
+/* USER CODE BEGIN Header_orderTeleTask */
+/**
+* @brief Function implementing the orderTele thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_orderTeleTask */
+void orderTeleTask(void *argument)
+{
+  /* USER CODE BEGIN orderTeleTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END orderTeleTask */
 }
 
 /* Private application code --------------------------------------------------*/

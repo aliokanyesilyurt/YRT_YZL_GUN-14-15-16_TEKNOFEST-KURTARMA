@@ -1,6 +1,7 @@
 #ifndef NEWFUNCTIONS_H
 #define NEWFUNCTIONS_H
 #define BNO_ADDR 0x50
+#define DENIZ_BAS 1013.25
 
 typedef enum {
     FAZ_RAMPA, // Rampa konumunda.
@@ -12,11 +13,12 @@ typedef enum {
 	FAZ_BITIS // Yere tam olarak indiğini yahut hızının vs sıfırlandığını belirten durum.
 } UcusFazlari;
 
-
 #include "main.h"
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 #include "bno055.h"
+#include "bmp180_for_stm32_hal.h"
 
 extern I2C_HandleTypeDef hi2c2;
 extern UART_HandleTypeDef huart2;
@@ -31,6 +33,7 @@ void anaParasutAcma(void); // Hız istenen duruma geldiyse ana paraşütü bunun
 void ledYakma(void); // İniş tamamen yapıldıysa bununla led yak.
 void inisKontrol(void); // İnişin başarılı olup olmadığını kontrol eden fonksiyon.
 void hizHesaplama(float z_ivme);
+float irtifaHesaplama(void);
 float ortFiltreleme(float ortGuncel, float ortFiltre); // Hareketli ortalama filtresi.
 void uartOkuma(void); // UART ile ekranımıza veri gönderen fonksiyon.
 #endif

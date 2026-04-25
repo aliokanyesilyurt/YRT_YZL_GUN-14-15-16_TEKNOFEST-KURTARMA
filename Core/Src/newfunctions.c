@@ -3,6 +3,9 @@
 UcusFazlari ucusDurumu = FAZ_RAMPA;
 
 float z_ivme = 0, dikey_hiz = 0.0f;
+float irtifaBagil = 0, irtifaMax = 0, irtifaFiltre = 0, irtifaGuncel = 0,
+		irtifaBaslangic = 0, basincFiltre = 0, basincGuncel = 0, basincBaslangic = 0,
+		sicaklikFiltre = 0, sicaklikGuncel = 0;
 uint32_t gecmis_zaman = 0, dusus_sayaci = 0;
 
 bno055_vector_t euler;
@@ -24,6 +27,17 @@ void veriOkuma(void){
 	euler = bno055_getVectorEuler();
 	ivme = bno055_getVectorLinearAccel();
 	z_ivme = ortFiltreleme(ivme.z,z_ivme);
+
+	basincGuncel = BMP180_GetPressure();
+	sicaklikGuncel = BMP180_GetTemperature();
+
+	basincFiltre = ortFiltreleme(basincGuncel, basincFiltre);
+	sicaklikFiltre = ortFiltreleme(sicaklikGuncel, sicaklikFiltre);
+
+	if (basincBaslangic > 0) irtifaGuncel = irtifaHesaplama();
+	irtifaFiltre = ortFiltreleme(irtifaGuncel, irtifaFiltre);
+	irtifaBagil = irtifaFiltre - irtifaBaslangic;
+	if (irtifaBagil < 0) irtifaBagil = 0;
 }
 
 void firlatma(void){
@@ -97,6 +111,11 @@ void hizHesaplama(float z_ivme) {
     if (dt > 0.5f) return;
 
     dikey_hiz += (z_ivme * dt);
+}
+
+float irtifaHesaplama(void) {
+	irtifaGuncel = 44330.0f * (1.0f - powf(basincFiltre / DENIZ_BAS, 0.1903f));
+    return irtifaGuncel; // Basınç ve sıcaklıktan irtifa hesabı formülü.
 }
 
 float ortFiltreleme(float ortGuncel, float ortFiltre) {
