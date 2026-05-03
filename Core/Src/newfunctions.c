@@ -6,8 +6,7 @@ float z_ivme = 0, dikey_hiz = 0.0f;
 float irtifaBagil = 0, irtifaMax = 0, irtifaFiltre = 0, irtifaGuncel = 0,
 		irtifaBaslangic = 0, basincFiltre = 0, basincGuncel = 0, basincBaslangic = 0,
 		sicaklikFiltre = 0, sicaklikGuncel = 0;
-uint32_t gecmis_zaman = 0, dusus_sayaci = 0;
-
+uint32_t gecmis_zaman = 0, durma_zamani = 0, dusus_sayaci = 0;
 bno055_vector_t euler;
 bno055_vector_t ivme;
 
@@ -24,15 +23,20 @@ void bno055_delay(int time) {
 }
 
 void veriOkuma(void){
+
+
 	euler = bno055_getVectorEuler();
 	ivme = bno055_getVectorLinearAccel();
-	z_ivme = ortFiltreleme(ivme.z,z_ivme);
-
 	basincGuncel = BMP180_GetPressure();
 	sicaklikGuncel = BMP180_GetTemperature();
 
+	  if(basincBaslangic == 0.0f) {
+	          basincBaslangic = basincFiltre;
+	      }
+
 	basincFiltre = ortFiltreleme(basincGuncel, basincFiltre);
 	sicaklikFiltre = ortFiltreleme(sicaklikGuncel, sicaklikFiltre);
+	z_ivme = ortFiltreleme(ivme.z,z_ivme);
 
 	if (basincBaslangic > 0) irtifaGuncel = irtifaHesaplama();
 	irtifaFiltre = ortFiltreleme(irtifaGuncel, irtifaFiltre);
@@ -41,25 +45,28 @@ void veriOkuma(void){
 }
 
 void firlatma(void){
-	if(z_ivme > 2.0f){
+	if(irtifaBaslangic == 0 && irtifaFiltre > 0){
+	        irtifaBaslangic = irtifaFiltre;
+	    }
+	if(z_ivme > 20.0f){
 		ucusDurumu = FAZ_FIRLATMA;
 	}
 }
 
 void tirmanma(void){
-	    if (z_ivme < 0.5f) {
-	        ucusDurumu = FAZ_TIRMANIS;
+	    if(z_ivme < 20.0f){
+	    	ucusDurumu = FAZ_TIRMANIS;
 	    }
 }
 
 void arama(void){
-	if(dikey_hiz > 3.0f){
+	if(dikey_hiz > 30.0f || irtifaBagil > 100.0f){
 		ucusDurumu = FAZ_ARAYIS;
 	}
 }
 
 void drogueAcma(void){
-	if(dikey_hiz < -1.0f){
+	if(dikey_hiz < -10.0f){
 		dusus_sayaci++;
 
 		if(dusus_sayaci > 5){
@@ -68,7 +75,7 @@ void drogueAcma(void){
 			ucusDurumu = FAZ_DUSUS;
 	}
 
-	}else if((euler.y > 0.7f || euler.y < -0.7f || euler.x > 0.7f || euler.x < -0.7f) && (dikey_hiz < 0.15f)){
+	}else if((euler.y > 70.0f || euler.y < -70.0f || euler.x > 70.0f || euler.x < -70.0f) && (dikey_hiz < 15.0f)){
 		HAL_GPIO_WritePin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin, 1); // Drogue paraşütü servosu çalıştı paraşüt atıldı.
 		HAL_GPIO_WritePin(LED_PA4_GPIO_Port, LED_PA4_Pin, 1);
 		ucusDurumu = FAZ_DUSUS;
@@ -80,23 +87,27 @@ void drogueAcma(void){
 }
 
 void anaParasutAcma(void){
-	ucusDurumu = FAZ_INIS;
-
+	if(irtifaFiltre < 600.0f){
+		HAL_GPIO_WritePin(ANA_PA8_GPIO_Port, ANA_PA8_Pin, 1);
+		HAL_GPIO_WritePin(LED_PA6_GPIO_Port, LED_PA6_Pin, 1);
+	}
 }
 
 void inisKontrol(void) {
     if (dikey_hiz < -50.0f) {
         HAL_GPIO_WritePin(YEDEK_PA7_GPIO_Port, YEDEK_PA7_Pin, 1);
     }
-    if ((z_ivme < 0.1f || z_ivme > -0.1f) && (dikey_hiz < 0.5f || dikey_hiz > -0.5f)) {
-    	uint8_t durma_zamani = 0;
+    if ((z_ivme < 0.5f && z_ivme > -0.5f) && (dikey_hiz < 1.0f && dikey_hiz > -1.0f)) {
+
     	if(durma_zamani == 0){
     		durma_zamani = HAL_GetTick();
     	}
     	if((HAL_GetTick() - durma_zamani) > 5000){
         ucusDurumu = FAZ_BITIS;
-    	} // İnişin doğruluğunu kontrol edip yedek paraşüt açan fonksiyon.
-    }
+    	}// İnişin doğruluğunu kontrol edip yedek paraşüt açan fonksiyon.
+    }else{
+		durma_zamani = 0;
+	}
 }
 
 void ledYakma(void) {

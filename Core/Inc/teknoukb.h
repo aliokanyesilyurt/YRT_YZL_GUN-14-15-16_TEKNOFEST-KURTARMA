@@ -16,9 +16,10 @@ typedef union {
 } FloatDonusturucu;
 
 void modGuncelle(uint8_t komut);
-void teleGonder();
-void fazGonder();
-
+void durumGuncelle(void);
+void teleGonder(void);
+void fazGonder(void);
+void sahteAl(uint8_t *sahteTele);
 extern TestModlari aktifMod;
 
 #endif

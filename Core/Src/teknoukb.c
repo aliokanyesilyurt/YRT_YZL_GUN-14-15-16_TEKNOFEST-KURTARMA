@@ -9,10 +9,11 @@ extern float basincFiltre;
 TestModlari aktifMod = MOD_UCUS;
 
 uint16_t durum;
-uint8_t telePaket[36];
-uint8_t fazPaket[6];
+uint8_t telePaket[36] = {0};
+uint8_t fazPaket[6] = {0};
+uint8_t sahtePaket[36] = {0};
 
-uint8_t header = 0xAA;
+uint8_t header = 0xAB;
 uint8_t footer1 = 0x0D;
 uint8_t footer2 = 0x0A;
 
@@ -22,10 +23,26 @@ void modGuncelle(uint8_t komut){
 	else if(komut == 0x24) aktifMod = MOD_UCUS;
 }
 
-void teleGonder(){
+void durumGuncelle(void) {
+    durum = 0;
+    durum |= (ucusDurumu & 0xFF);
+
+    if (ucusDurumu >= FAZ_FIRLATMA) durum |= (1 << 0);
+        if (ucusDurumu >= FAZ_TIRMANIS) durum |= (1 << 1);
+        if (ucusDurumu >= FAZ_ARAYIS)   durum |= (1 << 4);
+
+    if (HAL_GPIO_ReadPin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin) == GPIO_PIN_SET) {
+        durum |= (1 << 8);
+    }
+    if (HAL_GPIO_ReadPin(YEDEK_PA7_GPIO_Port, YEDEK_PA7_Pin) == GPIO_PIN_SET) {
+        durum |= (1 << 9);
+    }
+}
+
+void teleGonder(void){
 	FloatDonusturucu cevirici;
-	uint32_t teleChecksumToplam;
-	uint8_t teleChecksum;
+	uint32_t teleChecksumToplam = 0;
+	uint8_t teleChecksum = 0;
 	uint8_t index = 0;
 
 	telePaket[index++] = header;
@@ -91,23 +108,96 @@ void teleGonder(){
 	HAL_UART_Transmit(&huart2, telePaket, sizeof(telePaket), 100);
 }
 
-void fazGonder(){
-	uint32_t fazChecksumToplam;
-	uint8_t fazChecksum;
-	uint8_t index = 0;
+void fazGonder(void){
+    durumGuncelle();
+    uint8_t index = 0;
 
-	fazPaket[index++] = header;
-	fazPaket[index++] = (uint8_t)(durum & 0xFF);
-	fazPaket[index++] = (uint8_t)((durum >> 8) & 0xFF);
+    fazPaket[index++] = 0xAA;
+    fazPaket[index++] = (uint8_t)(durum & 0xFF);
+    fazPaket[index++] = (uint8_t)((durum >> 8) & 0xFF);
 
-	for(int i=0;i<index;i++){
-		fazChecksumToplam += fazPaket[i];
-	}
-	fazChecksum = fazChecksumToplam % 256;
-	fazPaket[index++] = fazChecksum;
+    uint32_t fazChecksumToplam = fazPaket[0] + fazPaket[1] + fazPaket[2];
+    fazPaket[index++] = fazChecksumToplam % 256;
 
-	fazPaket[index++] = footer1;
-	fazPaket[index++] = footer2;
+    fazPaket[index++] = footer1; // 0x0D
+    fazPaket[index++] = footer2; // 0x0A
 
-	HAL_UART_Transmit(&huart2, fazPaket, sizeof(fazPaket), 100);
+    HAL_UART_Transmit(&huart2, fazPaket, 6, 100);
+}
+
+void sahteAl(uint8_t *sahteVeri){
+    uint8_t temp[4];
+    float tempFloat; // BU HAYAT KURTARACAK!
+    uint8_t index = 1; // 0xAB'yi atla
+
+    // KİLİDİ AL
+    osMutexAcquire(SensorMutexHandle, osWaitForever);
+
+    // İRTİFA
+    temp[3] = sahteVeri[index++];
+    temp[2] = sahteVeri[index++];
+    temp[1] = sahteVeri[index++];
+    temp[0] = sahteVeri[index++];
+    memcpy(&tempFloat, temp, 4);
+    irtifaFiltre = tempFloat;
+
+    // BASINÇ
+    temp[3] = sahteVeri[index++];
+    temp[2] = sahteVeri[index++];
+    temp[1] = sahteVeri[index++];
+    temp[0] = sahteVeri[index++];
+    memcpy(&tempFloat, temp, 4);
+    basincFiltre = tempFloat;
+
+    // İVME X
+    temp[3] = sahteVeri[index++];
+    temp[2] = sahteVeri[index++];
+    temp[1] = sahteVeri[index++];
+    temp[0] = sahteVeri[index++];
+    memcpy(&tempFloat, temp, 4);
+    ivme.x = tempFloat;
+
+    // İVME Y
+    temp[3] = sahteVeri[index++];
+    temp[2] = sahteVeri[index++];
+    temp[1] = sahteVeri[index++];
+    temp[0] = sahteVeri[index++];
+    memcpy(&tempFloat, temp, 4);
+    ivme.y = tempFloat;
+
+    // İVME Z
+    temp[3] = sahteVeri[index++];
+    temp[2] = sahteVeri[index++];
+    temp[1] = sahteVeri[index++];
+    temp[0] = sahteVeri[index++];
+    memcpy(&tempFloat, temp, 4);
+    ivme.z = tempFloat;
+    z_ivme = ivme.z;
+
+    // AÇI X
+    temp[3] = sahteVeri[index++];
+    temp[2] = sahteVeri[index++];
+    temp[1] = sahteVeri[index++];
+    temp[0] = sahteVeri[index++];
+    memcpy(&tempFloat, temp, 4);
+    euler.x = tempFloat;
+
+    // AÇI Y
+    temp[3] = sahteVeri[index++];
+    temp[2] = sahteVeri[index++];
+    temp[1] = sahteVeri[index++];
+    temp[0] = sahteVeri[index++];
+    memcpy(&tempFloat, temp, 4);
+    euler.y = tempFloat;
+
+    // AÇI Z
+    temp[3] = sahteVeri[index++];
+    temp[2] = sahteVeri[index++];
+    temp[1] = sahteVeri[index++];
+    temp[0] = sahteVeri[index++];
+    memcpy(&tempFloat, temp, 4);
+    euler.z = tempFloat;
+
+    // KİLİDİ AÇ
+    osMutexRelease(SensorMutexHandle);
 }

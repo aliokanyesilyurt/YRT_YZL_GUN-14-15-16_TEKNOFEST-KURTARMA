@@ -19,14 +19,15 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "dma.h"
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
-#include "newfunctions.h"
-#include "teknoukb.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "newfunctions.h"
+#include "teknoukb.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,7 +48,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+extern UART_HandleTypeDef huart2;
+extern osSemaphoreId_t TeleSemHandle;
+extern osThreadId_t orderTeleHandle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,6 +94,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
@@ -101,6 +105,9 @@ int main(void)
   HAL_Delay(1000);
   bno055_setup();
   bno055_setOperationModeNDOF();
+
+  extern uint8_t rxBuffer[100];
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxBuffer, sizeof(rxBuffer));
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -166,7 +173,29 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+extern uint8_t rxBuffer[100];
 
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+    if(huart->Instance == USART2)
+    {
+        osThreadFlagsSet(orderTeleHandle, 0x0001);
+    }
+}
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    if(huart->Instance == USART2)
+    {
+        // 1. Hata bayraklarını zorla temizle
+        __HAL_UART_CLEAR_OREFLAG(huart);
+        __HAL_UART_CLEAR_NEFLAG(huart);
+        __HAL_UART_CLEAR_FEFLAG(huart);
+
+        // 3. Görev falan beklemeden DMA'yı şak diye tekrar başlat
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxBuffer, sizeof(rxBuffer));
+    }
+}
 /* USER CODE END 4 */
 
 /**

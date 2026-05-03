@@ -14,6 +14,7 @@ typedef enum {
 } UcusFazlari;
 
 #include "main.h"
+#include "cmsis_os.h"
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
@@ -22,8 +23,10 @@ typedef enum {
 
 extern I2C_HandleTypeDef hi2c2;
 extern UART_HandleTypeDef huart2;
+extern osMutexId_t SensorMutexHandle;
+extern uint8_t sahtePaket[36];
+extern float z_ivme;
 extern UcusFazlari ucusDurumu;
-
 void veriOkuma(void);
 void firlatma(void); // Kalkışın tespitini sağlayan fonksiyon.
 void tirmanma(void); // Burnout tespiti yapan fonksiyon.

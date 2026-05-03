@@ -1,3 +1,5 @@
-../Core/Src/teknoukb.c:19:6:modGuncelle	4
-../Core/Src/teknoukb.c:25:6:teleGonder	2
-../Core/Src/teknoukb.c:94:6:fazGonder	2
+../Core/Src/teknoukb.c:20:6:modGuncelle	4
+../Core/Src/teknoukb.c:26:6:durumGuncelle	6
+../Core/Src/teknoukb.c:42:6:teleGonder	2
+../Core/Src/teknoukb.c:111:6:fazGonder	1
+../Core/Src/teknoukb.c:128:6:sahteAl	1

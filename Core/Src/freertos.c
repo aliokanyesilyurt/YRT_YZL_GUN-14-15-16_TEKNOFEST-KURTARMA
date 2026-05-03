@@ -27,7 +27,6 @@
 /* USER CODE BEGIN Includes */
 #include "newfunctions.h"
 #include "teknoukb.h"
-#include "main.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,22 +46,29 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-	uint8_t rxBuffer[2];
+	uint8_t headerByte;
 	extern uint8_t header;
+	HAL_StatusTypeDef sonuc;
+	uint8_t rxBuffer[100];
+	extern TestModlari aktifMod;
+
+	uint8_t debug_ab_sayaci = 0;
+	uint16_t debug_bekleyen_boyut = 0;
+	uint8_t debug_sahteal_sayaci = 0;
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityBelowNormal,
 };
 /* Definitions for stateMachine */
 osThreadId_t stateMachineHandle;
 const osThreadAttr_t stateMachine_attributes = {
   .name = "stateMachine",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* Definitions for sendTele */
 osThreadId_t sendTeleHandle;
@@ -75,7 +81,7 @@ const osThreadAttr_t sendTele_attributes = {
 osThreadId_t orderTeleHandle;
 const osThreadAttr_t orderTele_attributes = {
   .name = "orderTele",
-  .stack_size = 128 * 4,
+  .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityRealtime,
 };
 /* Definitions for SensorMutex */
@@ -170,7 +176,7 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  HAL_GPIO_TogglePin(LED_PA5_GPIO_Port, LED_PA5_Pin);
+
     osDelay(1000);
   }
   /* USER CODE END StartDefaultTask */
@@ -190,9 +196,11 @@ void stateMachineTask(void *argument)
   for(;;)
   {
 	  if(aktifMod == MOD_UCUS || aktifMod == MOD_SIT) veriOkuma();
-	  else if(aktifMod == MOD_SUT){
+	  else if(aktifMod == MOD_SUT){}
 
-	  }
+
+	  hizHesaplama(z_ivme);
+
 	  switch (ucusDurumu){ // Kurtarma algoritması, fonksiyonlar ve switch-case yapısıyla oluşturuldu.
 		  	  case FAZ_RAMPA: firlatma(); // Rampadan fırlatmayı tespit etme.
 		  	  	  	  	  	  break;
@@ -209,7 +217,8 @@ void stateMachineTask(void *argument)
 			  case FAZ_BITIS: ledYakma(); // İnişin tamamlanmasıyla beraber yapılacaklar.
 			  	  	  	  	  break;
 	  }
-    osDelay(80);
+
+	  osDelay(80);
   }
   /* USER CODE END stateMachineTask */
 }
@@ -229,8 +238,9 @@ void sendTeleTask(void *argument)
   {
 	 if(aktifMod == MOD_UCUS || aktifMod == MOD_SIT) teleGonder();
 	 else if(aktifMod == MOD_SUT) fazGonder();
-    osDelay(100);
+	 osDelay(100);
   }
+
   /* USER CODE END sendTeleTask */
 }
 
@@ -244,17 +254,76 @@ void sendTeleTask(void *argument)
 void orderTeleTask(void *argument)
 {
   /* USER CODE BEGIN orderTeleTask */
+  HAL_GPIO_WritePin(LED_PA5_GPIO_Port, LED_PA5_Pin, 1);
+
+    // USB'den parça parça gelen verileri birleştireceğimiz depo
+    static uint8_t depo[256];
+    static uint16_t depoLen = 0;
   /* Infinite loop */
-  for(;;)
-  {
-	  if(osSemaphoreAcquire(TeleSemHandle, osWaitForever) == osOK){
-		  if(rxBuffer[0] == header){
-			  modGuncelle(rxBuffer[1]);
-		  }
-		  HAL_UART_Receive_IT(&huart2, rxBuffer, 2);
-	  }
-    osDelay(1);
-  }
+    for(;;)
+      {
+          osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
+
+          uint16_t rxLen = sizeof(rxBuffer) - __HAL_DMA_GET_COUNTER(huart2.hdmarx);
+
+          // Depo taşmasını önle (Güvenlik)
+          if(depoLen + rxLen > 250) depoLen = 0;
+
+          // Yeni gelen parçayı depoya ekle
+          memcpy(&depo[depoLen], rxBuffer, rxLen);
+          depoLen += rxLen;
+
+          int i = 0;
+          while(i < depoLen)
+          {
+              // --- 1. KOMUT PAKETİ (0xAA) ---
+              if(depo[i] == 0xAA)
+              {
+                  // Eğer 5 bayt tamamlanmadıysa, döngüden çık, devamının gelmesini bekle!
+                  if((depoLen - i) < 5) break;
+
+                  uint8_t gercekCS = depo[i] + depo[i+1];
+                  if(depo[i+2] == gercekCS)
+                  {
+                      if(depo[i+1] == 0x20) aktifMod = MOD_SIT;
+                      else if(depo[i+1] == 0x22) aktifMod = MOD_SUT;
+                      else if(depo[i+1] == 0x24) aktifMod = MOD_UCUS;
+                  }
+                  i += 5; // Yuttuk, ilerle
+                  continue;
+              }
+              // --- 2. SUT VERİ PAKETİ (0xAB) ---
+              else if(depo[i] == 0xAB)
+              {
+            	  debug_ab_sayaci++; // 0xAB başlığını gördük mü?
+            	  debug_bekleyen_boyut = (depoLen - i);
+                  // Eğer 36 bayt tamamlanmadıysa, vagon kopmuştur, döngüden çık bekle!
+                  if((depoLen - i) < 36) break;
+
+                  sahteAl(&depo[i]);
+
+                  debug_sahteal_sayaci++;
+                  i += 36; // Yuttuk, ilerle
+                  continue;
+              }
+              // Çöp veri varsa 1 bayt atla
+              else {
+                  i++;
+              }
+          }
+
+          // İşlenmemiş (eksik kalmış) verileri deponun en başına kaydır ki sonrakilerle birleşsin
+          if(i < depoLen) {
+              memmove(depo, &depo[i], depoLen - i);
+              depoLen = depoLen - i;
+          } else {
+              depoLen = 0;
+          }
+
+          // DMA'yı tekrar kur
+          memset(rxBuffer, 0, sizeof(rxBuffer));
+          HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxBuffer, sizeof(rxBuffer));
+      }
   /* USER CODE END orderTeleTask */
 }
 
