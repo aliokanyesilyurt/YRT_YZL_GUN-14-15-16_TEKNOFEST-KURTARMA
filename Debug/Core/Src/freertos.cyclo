@@ -2,4 +2,4 @@
 ../Core/Src/freertos.c:173:6:StartDefaultTask	1
 ../Core/Src/freertos.c:192:6:stateMachineTask	10
 ../Core/Src/freertos.c:233:6:sendTeleTask	4
-../Core/Src/freertos.c:254:6:orderTeleTask	12
+../Core/Src/freertos.c:254:6:orderTeleTask	9

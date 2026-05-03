@@ -183,15 +183,14 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     }
 }
 
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
-{
-    if(huart->Instance == USART2)
-    {
-        __HAL_UART_CLEAR_OREFLAG(huart);
-        __HAL_UART_CLEAR_NEFLAG(huart);
-        __HAL_UART_CLEAR_FEFLAG(huart);
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
+    if(huart->Instance == USART2){
+    	// UART hattını hataya rağmen çalışır yapıyoruz.
+        __HAL_UART_CLEAR_OREFLAG(huart); // Overrun error temizleyici.
+        __HAL_UART_CLEAR_NEFLAG(huart); // Noise error temizleyici.
+        __HAL_UART_CLEAR_FEFLAG(huart); // Framing error temizleyici.
 
-        HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxBuffer, sizeof(rxBuffer));
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxBuffer, sizeof(rxBuffer)); // DMA kulağını açma.
     }
 }
 /* USER CODE END 4 */

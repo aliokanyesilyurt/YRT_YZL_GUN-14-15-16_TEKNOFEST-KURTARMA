@@ -261,29 +261,26 @@ void orderTeleTask(void *argument)
   /* Infinite loop */
     for(;;)
       {
-          osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
-          uint16_t rxLen = sizeof(rxBuffer) - __HAL_DMA_GET_COUNTER(huart2.hdmarx);
-          if(depoLen + rxLen > 250) depoLen = 0;
+          osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever); // Görev yalnızca emir gelince uyanır.
+          uint16_t rxLen = sizeof(rxBuffer) - __HAL_DMA_GET_COUNTER(huart2.hdmarx); // Gelen verinin boyutunu hesaplama.
+          if(depoLen + rxLen > 250) depoLen = 0; // Verilerin tek bir havuzda toplanmasını sağlar.
           memcpy(&depo[depoLen], rxBuffer, rxLen);
           depoLen += rxLen;
           int i = 0;
           while(i < depoLen)
           {
-              if(depo[i] == 0xAA){
+              if(depo[i] == 0xAA){ // Başlığı bulmaya çalışıyoruz buna göre sonraki komutu bekliyoruz.
                   if((depoLen - i) < 5) break;
                   uint8_t gercekCS = depo[i] + depo[i+1];
                   if(depo[i+2] == gercekCS){
-                      if(depo[i+1] == 0x20) aktifMod = MOD_SIT;
-                      else if(depo[i+1] == 0x22) aktifMod = MOD_SUT;
-                      else if(depo[i+1] == 0x24) aktifMod = MOD_UCUS;
+                	  modGuncelle(depo[i+1]);
                   }
                   i += 5; // Yuttuk, ilerle
                   continue;
               }
-              // --- 2. SUT VERİ PAKETİ (0xAB) ---
+              // SUT
               else if(depo[i] == 0xAB){
-                  // Eğer 36 bayt tamamlanmadıysa, vagon kopmuştur, döngüden çık bekle!
-                  if((depoLen - i) < 36) break;
+                  if((depoLen - i) < 36) break; // 36 bayt veri gelmesini bekleyen fonksiyon.
                   sahteAl(&depo[i]);
                   i += 36;
                   continue;
@@ -294,13 +291,13 @@ void orderTeleTask(void *argument)
           }
 
           if(i < depoLen) {
-              memmove(depo, &depo[i], depoLen - i);
+              memmove(depo, &depo[i], depoLen - i); // Kesik gelen verileri kaydırıyoruz.
               depoLen = depoLen - i;
           } else {
               depoLen = 0;
           }
 
-          memset(rxBuffer, 0, sizeof(rxBuffer));
+          memset(rxBuffer, 0, sizeof(rxBuffer)); // Hafızayı yeni veri alımına hazır hale getiriyoruz.
           HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxBuffer, sizeof(rxBuffer));
       }
   /* USER CODE END orderTeleTask */

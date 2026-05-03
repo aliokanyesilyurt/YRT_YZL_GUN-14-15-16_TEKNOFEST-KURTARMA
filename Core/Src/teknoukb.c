@@ -1,24 +1,23 @@
 #include "teknoukb.h"
-
+ // Başka dosyalarda tanımlanan ve kullanmamız gereken değişkenleri tanımlıyoruz.
 extern UART_HandleTypeDef huart2;
 extern bno055_vector_t ivme;
 extern bno055_vector_t euler;
 extern float irtifaFiltre;
 extern float basincFiltre;
-
+// Aktif modu standart olarak uçuş seçtik.
 TestModlari aktifMod = MOD_UCUS;
-
+// SUT testindeki ışıkları yakmak için durum kullandık.
 uint16_t durum;
-uint8_t telePaket[36] = {0};
+uint8_t telePaket[36] = {0}; // Dışarıdan alacağımız global paketler.
 uint8_t fazPaket[6] = {0};
-uint8_t sahtePaket[36] = {0};
 
-uint8_t header = 0xAB;
+uint8_t header = 0xAB; // Header ve footerları direkt tanımladık.
 uint8_t footer1 = 0x0D;
 uint8_t footer2 = 0x0A;
 
 void modGuncelle(uint8_t komut){
-	if(komut == 0x20) aktifMod = MOD_SIT;
+	if(komut == 0x20) aktifMod = MOD_SIT; // Komuta göre mod güncelleme.
 	else if(komut == 0x22) aktifMod = MOD_SUT;
 	else if(komut == 0x24) aktifMod = MOD_UCUS;
 }
@@ -26,7 +25,7 @@ void modGuncelle(uint8_t komut){
 void durumGuncelle(void) {
     durum = 0;
 
-    if (ucusDurumu >= FAZ_FIRLATMA) durum |= (1 << 0);
+    if (ucusDurumu >= FAZ_FIRLATMA) durum |= (1 << 0); // Durumları değiştirme fonksiyonu.
     if (ucusDurumu >= FAZ_TIRMANIS) durum |= (1 << 1);
     if (ucusDurumu >= FAZ_ARAYIS)   durum |= (1 << 4);
 
@@ -43,9 +42,9 @@ void teleGonder(void){
 	uint32_t teleChecksumToplam = 0;
 	uint8_t teleChecksum = 0;
 	uint8_t index = 0;
-
+// Değişkenlerimizi mecburen fonksiyon içinde seçtik hepsi kendi fonksiyonuna özel.
 	telePaket[index++] = header;
-
+// Union yöntemiyle burada çevirmeyi yapıyoruz.
 	cevirici.giren = irtifaFiltre;
 	telePaket[index++] = cevirici.cikan[3];
 	telePaket[index++] = cevirici.cikan[2];
@@ -97,7 +96,7 @@ void teleGonder(void){
 	for(int i=0;i<index;i++){
 		teleChecksumToplam += telePaket[i];
 	}
-
+	// Checksum gerçekten gönderilecek veriye göre hesaplanıyor.
 	teleChecksum = teleChecksumToplam % 256;
 	telePaket[index++] = teleChecksum;
 
@@ -110,14 +109,14 @@ void teleGonder(void){
 void fazGonder(void){
     durumGuncelle();
     uint8_t index = 0;
-
+// Güncellenen durumları göndermemizi sağlayan fonksiyon.
     fazPaket[index++] = 0xAA;
     fazPaket[index++] = (uint8_t)(durum & 0xFF);
     fazPaket[index++] = (uint8_t)((durum >> 8) & 0xFF);
 
     uint32_t fazChecksumToplam = fazPaket[0] + fazPaket[1] + fazPaket[2];
     fazPaket[index++] = fazChecksumToplam % 256;
-
+    // Checksum gerçekten gönderilecek veriye göre hesaplanıyor.
     fazPaket[index++] = footer1; // 0x0D
     fazPaket[index++] = footer2; // 0x0A
 
@@ -125,22 +124,19 @@ void fazGonder(void){
 }
 
 void sahteAl(uint8_t *sahteVeri){
-    uint8_t temp[4];
-    float tempFloat; // BU HAYAT KURTARACAK!
-    uint8_t index = 1; // 0xAB'yi atla
+    uint8_t temp[4]; // Tek tek paketler halinde almamızı sağlıyor.
+    float tempFloat; // Paketleri direkt çevirmemizi sağlıyor.
+    uint8_t index = 1; // Headerı ayrıca aldığımız için 0 yerine 1'den başlıyor.
 
-    // KİLİDİ AL
     osMutexAcquire(SensorMutexHandle, osWaitForever);
-
-    // İRTİFA
+// Aynı I2C hattını kullandığımız için mutex kullanmak zorundayız veri güvenliği için.
     temp[3] = sahteVeri[index++];
     temp[2] = sahteVeri[index++];
     temp[1] = sahteVeri[index++];
     temp[0] = sahteVeri[index++];
-    memcpy(&tempFloat, temp, 4);
-    irtifaFiltre = tempFloat;
+    memcpy(&tempFloat, temp, 4); // Alınan veriyi direkt istasyo
+    irtifaFiltre = tempFloat; // Double türündeki veriyi direkt memcpy ile gönderemeyiz.
 
-    // BASINÇ
     temp[3] = sahteVeri[index++];
     temp[2] = sahteVeri[index++];
     temp[1] = sahteVeri[index++];
@@ -148,7 +144,6 @@ void sahteAl(uint8_t *sahteVeri){
     memcpy(&tempFloat, temp, 4);
     basincFiltre = tempFloat;
 
-    // İVME X
     temp[3] = sahteVeri[index++];
     temp[2] = sahteVeri[index++];
     temp[1] = sahteVeri[index++];
@@ -156,7 +151,6 @@ void sahteAl(uint8_t *sahteVeri){
     memcpy(&tempFloat, temp, 4);
     ivme.x = tempFloat;
 
-    // İVME Y
     temp[3] = sahteVeri[index++];
     temp[2] = sahteVeri[index++];
     temp[1] = sahteVeri[index++];
@@ -164,7 +158,6 @@ void sahteAl(uint8_t *sahteVeri){
     memcpy(&tempFloat, temp, 4);
     ivme.y = tempFloat;
 
-    // İVME Z
     temp[3] = sahteVeri[index++];
     temp[2] = sahteVeri[index++];
     temp[1] = sahteVeri[index++];
@@ -173,7 +166,6 @@ void sahteAl(uint8_t *sahteVeri){
     ivme.z = tempFloat;
     z_ivme = ivme.z;
 
-    // AÇI X
     temp[3] = sahteVeri[index++];
     temp[2] = sahteVeri[index++];
     temp[1] = sahteVeri[index++];
@@ -181,7 +173,6 @@ void sahteAl(uint8_t *sahteVeri){
     memcpy(&tempFloat, temp, 4);
     euler.x = tempFloat;
 
-    // AÇI Y
     temp[3] = sahteVeri[index++];
     temp[2] = sahteVeri[index++];
     temp[1] = sahteVeri[index++];
@@ -189,7 +180,6 @@ void sahteAl(uint8_t *sahteVeri){
     memcpy(&tempFloat, temp, 4);
     euler.y = tempFloat;
 
-    // AÇI Z
     temp[3] = sahteVeri[index++];
     temp[2] = sahteVeri[index++];
     temp[1] = sahteVeri[index++];
@@ -197,6 +187,5 @@ void sahteAl(uint8_t *sahteVeri){
     memcpy(&tempFloat, temp, 4);
     euler.z = tempFloat;
 
-    // KİLİDİ AÇ
     osMutexRelease(SensorMutexHandle);
 }
