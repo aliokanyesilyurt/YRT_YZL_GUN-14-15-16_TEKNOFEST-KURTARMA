@@ -25,17 +25,16 @@ void modGuncelle(uint8_t komut){
 
 void durumGuncelle(void) {
     durum = 0;
-    durum |= (ucusDurumu & 0xFF);
 
     if (ucusDurumu >= FAZ_FIRLATMA) durum |= (1 << 0);
-        if (ucusDurumu >= FAZ_TIRMANIS) durum |= (1 << 1);
-        if (ucusDurumu >= FAZ_ARAYIS)   durum |= (1 << 4);
+    if (ucusDurumu >= FAZ_TIRMANIS) durum |= (1 << 1);
+    if (ucusDurumu >= FAZ_ARAYIS)   durum |= (1 << 4);
 
-    if (HAL_GPIO_ReadPin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin) == GPIO_PIN_SET) {
-        durum |= (1 << 8);
+    if (HAL_GPIO_ReadPin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin) == GPIO_PIN_SET){
+        durum |= (1 << 5);
     }
-    if (HAL_GPIO_ReadPin(YEDEK_PA7_GPIO_Port, YEDEK_PA7_Pin) == GPIO_PIN_SET) {
-        durum |= (1 << 9);
+    if (HAL_GPIO_ReadPin(ANA_PA8_GPIO_Port, ANA_PA8_Pin) == GPIO_PIN_SET){
+        durum |= (1 << 7);
     }
 }
 
@@ -48,52 +47,52 @@ void teleGonder(void){
 	telePaket[index++] = header;
 
 	cevirici.giren = irtifaFiltre;
-	telePaket[index++] = cevirici.cikan[0];
-	telePaket[index++] = cevirici.cikan[1];
-	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[3];
+	telePaket[index++] = cevirici.cikan[2];
+	telePaket[index++] = cevirici.cikan[1];
+	telePaket[index++] = cevirici.cikan[0];
 
 	cevirici.giren = basincFiltre;
-	telePaket[index++] = cevirici.cikan[0];
-	telePaket[index++] = cevirici.cikan[1];
-	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[3];
+	telePaket[index++] = cevirici.cikan[2];
+	telePaket[index++] = cevirici.cikan[1];
+	telePaket[index++] = cevirici.cikan[0];
 
 	cevirici.giren = ivme.x;
-	telePaket[index++] = cevirici.cikan[0];
-	telePaket[index++] = cevirici.cikan[1];
-	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[3];
+	telePaket[index++] = cevirici.cikan[2];
+	telePaket[index++] = cevirici.cikan[1];
+	telePaket[index++] = cevirici.cikan[0];
 
 	cevirici.giren = ivme.y;
-	telePaket[index++] = cevirici.cikan[0];
-	telePaket[index++] = cevirici.cikan[1];
-	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[3];
+	telePaket[index++] = cevirici.cikan[2];
+	telePaket[index++] = cevirici.cikan[1];
+	telePaket[index++] = cevirici.cikan[0];
 
 	cevirici.giren = ivme.z;
-	telePaket[index++] = cevirici.cikan[0];
-	telePaket[index++] = cevirici.cikan[1];
-	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[3];
+	telePaket[index++] = cevirici.cikan[2];
+	telePaket[index++] = cevirici.cikan[1];
+	telePaket[index++] = cevirici.cikan[0];
 
 	cevirici.giren = euler.x;
-	telePaket[index++] = cevirici.cikan[0];
-	telePaket[index++] = cevirici.cikan[1];
-	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[3];
+	telePaket[index++] = cevirici.cikan[2];
+	telePaket[index++] = cevirici.cikan[1];
+	telePaket[index++] = cevirici.cikan[0];
 
 	cevirici.giren = euler.y;
-	telePaket[index++] = cevirici.cikan[0];
-	telePaket[index++] = cevirici.cikan[1];
-	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[3];
+	telePaket[index++] = cevirici.cikan[2];
+	telePaket[index++] = cevirici.cikan[1];
+	telePaket[index++] = cevirici.cikan[0];
 
 	cevirici.giren = euler.z;
-	telePaket[index++] = cevirici.cikan[0];
-	telePaket[index++] = cevirici.cikan[1];
-	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[3];
+	telePaket[index++] = cevirici.cikan[2];
+	telePaket[index++] = cevirici.cikan[1];
+	telePaket[index++] = cevirici.cikan[0];
 
 	for(int i=0;i<index;i++){
 		teleChecksumToplam += telePaket[i];

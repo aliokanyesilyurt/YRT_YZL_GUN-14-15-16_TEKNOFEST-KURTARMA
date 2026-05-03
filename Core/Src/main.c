@@ -187,12 +187,10 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
     if(huart->Instance == USART2)
     {
-        // 1. Hata bayraklarını zorla temizle
         __HAL_UART_CLEAR_OREFLAG(huart);
         __HAL_UART_CLEAR_NEFLAG(huart);
         __HAL_UART_CLEAR_FEFLAG(huart);
 
-        // 3. Görev falan beklemeden DMA'yı şak diye tekrar başlat
         HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxBuffer, sizeof(rxBuffer));
     }
 }

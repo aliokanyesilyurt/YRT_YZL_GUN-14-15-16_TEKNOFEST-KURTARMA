@@ -1,5 +1,5 @@
 ../Core/Src/teknoukb.c:20:6:modGuncelle	16	static
 ../Core/Src/teknoukb.c:26:6:durumGuncelle	8	static
-../Core/Src/teknoukb.c:42:6:teleGonder	24	static
-../Core/Src/teknoukb.c:111:6:fazGonder	16	static
-../Core/Src/teknoukb.c:128:6:sahteAl	32	static
+../Core/Src/teknoukb.c:41:6:teleGonder	24	static
+../Core/Src/teknoukb.c:110:6:fazGonder	16	static
+../Core/Src/teknoukb.c:127:6:sahteAl	32	static

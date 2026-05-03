@@ -254,37 +254,25 @@ void sendTeleTask(void *argument)
 void orderTeleTask(void *argument)
 {
   /* USER CODE BEGIN orderTeleTask */
-  HAL_GPIO_WritePin(LED_PA5_GPIO_Port, LED_PA5_Pin, 1);
+	HAL_GPIO_WritePin(LED_PA5_GPIO_Port, LED_PA5_Pin, 1);
 
-    // USB'den parça parça gelen verileri birleştireceğimiz depo
     static uint8_t depo[256];
     static uint16_t depoLen = 0;
   /* Infinite loop */
     for(;;)
       {
           osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
-
           uint16_t rxLen = sizeof(rxBuffer) - __HAL_DMA_GET_COUNTER(huart2.hdmarx);
-
-          // Depo taşmasını önle (Güvenlik)
           if(depoLen + rxLen > 250) depoLen = 0;
-
-          // Yeni gelen parçayı depoya ekle
           memcpy(&depo[depoLen], rxBuffer, rxLen);
           depoLen += rxLen;
-
           int i = 0;
           while(i < depoLen)
           {
-              // --- 1. KOMUT PAKETİ (0xAA) ---
-              if(depo[i] == 0xAA)
-              {
-                  // Eğer 5 bayt tamamlanmadıysa, döngüden çık, devamının gelmesini bekle!
+              if(depo[i] == 0xAA){
                   if((depoLen - i) < 5) break;
-
                   uint8_t gercekCS = depo[i] + depo[i+1];
-                  if(depo[i+2] == gercekCS)
-                  {
+                  if(depo[i+2] == gercekCS){
                       if(depo[i+1] == 0x20) aktifMod = MOD_SIT;
                       else if(depo[i+1] == 0x22) aktifMod = MOD_SUT;
                       else if(depo[i+1] == 0x24) aktifMod = MOD_UCUS;
@@ -293,26 +281,18 @@ void orderTeleTask(void *argument)
                   continue;
               }
               // --- 2. SUT VERİ PAKETİ (0xAB) ---
-              else if(depo[i] == 0xAB)
-              {
-            	  debug_ab_sayaci++; // 0xAB başlığını gördük mü?
-            	  debug_bekleyen_boyut = (depoLen - i);
+              else if(depo[i] == 0xAB){
                   // Eğer 36 bayt tamamlanmadıysa, vagon kopmuştur, döngüden çık bekle!
                   if((depoLen - i) < 36) break;
-
                   sahteAl(&depo[i]);
-
-                  debug_sahteal_sayaci++;
-                  i += 36; // Yuttuk, ilerle
+                  i += 36;
                   continue;
               }
-              // Çöp veri varsa 1 bayt atla
-              else {
+              else{
                   i++;
               }
           }
 
-          // İşlenmemiş (eksik kalmış) verileri deponun en başına kaydır ki sonrakilerle birleşsin
           if(i < depoLen) {
               memmove(depo, &depo[i], depoLen - i);
               depoLen = depoLen - i;
@@ -320,7 +300,6 @@ void orderTeleTask(void *argument)
               depoLen = 0;
           }
 
-          // DMA'yı tekrar kur
           memset(rxBuffer, 0, sizeof(rxBuffer));
           HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rxBuffer, sizeof(rxBuffer));
       }

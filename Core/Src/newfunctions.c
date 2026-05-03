@@ -27,12 +27,15 @@ void veriOkuma(void){
 
 	euler = bno055_getVectorEuler();
 	ivme = bno055_getVectorLinearAccel();
-	basincGuncel = BMP180_GetPressure();
+	basincGuncel = BMP180_GetPressure() / 100.0f;
 	sicaklikGuncel = BMP180_GetTemperature();
 
-	  if(basincBaslangic == 0.0f) {
-	          basincBaslangic = basincFiltre;
-	      }
+	if(basincBaslangic == 0.0f && basincGuncel > 0.0f) {
+		    basincBaslangic = basincGuncel;
+	        basincFiltre = basincGuncel;
+	        sicaklikFiltre = sicaklikGuncel;
+	        z_ivme = ivme.z;
+		}
 
 	basincFiltre = ortFiltreleme(basincGuncel, basincFiltre);
 	sicaklikFiltre = ortFiltreleme(sicaklikGuncel, sicaklikFiltre);
