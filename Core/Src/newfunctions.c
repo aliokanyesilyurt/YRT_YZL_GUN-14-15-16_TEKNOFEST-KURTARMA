@@ -1,6 +1,8 @@
 #include "newfunctions.h"
 
 UcusFazlari ucusDurumu = FAZ_RAMPA;
+// SUT testindeki ışıkları yakmak için durum kullandık.
+uint16_t durum;
 
 float z_ivme = 0, dikey_hiz = 0.0f;
 float irtifaBagil = 0, irtifaMax = 0, irtifaFiltre = 0, irtifaGuncel = 0,
@@ -24,6 +26,7 @@ void bno055_delay(int time) {
 
 void veriOkuma(void){
 
+	osMutexAcquire(SensorMutexHandle, osWaitForever);
 
 	euler = bno055_getVectorEuler();
 	ivme = bno055_getVectorLinearAccel();
@@ -45,54 +48,58 @@ void veriOkuma(void){
 	irtifaFiltre = ortFiltreleme(irtifaGuncel, irtifaFiltre);
 	irtifaBagil = irtifaFiltre - irtifaBaslangic;
 	if (irtifaBagil < 0) irtifaBagil = 0;
+
+	osMutexRelease(SensorMutexHandle);
 }
 
 void firlatma(void){
 	if(irtifaBaslangic == 0 && irtifaFiltre > 0){
 	        irtifaBaslangic = irtifaFiltre;
 	    }
-	if(z_ivme > 20.0f){
+	if(z_ivme > 15.0f){
+		durum |= (1 << 0);
 		ucusDurumu = FAZ_FIRLATMA;
 	}
 }
 
 void tirmanma(void){
 	    if(z_ivme < 20.0f){
+	    	durum |= (1 << 1);
 	    	ucusDurumu = FAZ_TIRMANIS;
 	    }
 }
 
 void arama(void){
-	if(dikey_hiz > 30.0f || irtifaBagil > 100.0f){
-		ucusDurumu = FAZ_ARAYIS;
-	}
+    if(irtifaBagil > 2000.0f) {
+        durum |= (1 << 2);
+    }
+    if(euler.y > 40.0f || euler.y < -40.0f || euler.x > 40.0f || euler.x < -40.0f) {
+        durum |= (1 << 3);
+    }
+    if(dikey_hiz <= -0.0f){
+    	dusus_sayaci++;
+    	if(dusus_sayaci > 4){
+            durum |= (1 << 4);
+            ucusDurumu = FAZ_ARAYIS;
+    	}
+    }else{
+    	dusus_sayaci = 0;
+    }
 }
 
 void drogueAcma(void){
-	if(dikey_hiz < -10.0f){
-		dusus_sayaci++;
-
-		if(dusus_sayaci > 5){
-			HAL_GPIO_WritePin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin, 1); // Drogue paraşütü servosu çalıştı paraşüt atıldı.
-			HAL_GPIO_WritePin(LED_PA4_GPIO_Port, LED_PA4_Pin, 1);
-			ucusDurumu = FAZ_DUSUS;
-	}
-
-	}else if((euler.y > 70.0f || euler.y < -70.0f || euler.x > 70.0f || euler.x < -70.0f) && (dikey_hiz < 15.0f)){
-		HAL_GPIO_WritePin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin, 1); // Drogue paraşütü servosu çalıştı paraşüt atıldı.
-		HAL_GPIO_WritePin(LED_PA4_GPIO_Port, LED_PA4_Pin, 1);
-		ucusDurumu = FAZ_DUSUS;
-
-	}else{
-		dusus_sayaci=0;
-	}
-
+        HAL_GPIO_WritePin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin, 1);
+        HAL_GPIO_WritePin(LED_PA4_GPIO_Port, LED_PA4_Pin, 1);
+        durum |= (1 << 5);
+        ucusDurumu = FAZ_DUSUS;
 }
 
 void anaParasutAcma(void){
-	if(irtifaFiltre < 600.0f){
+	if(irtifaFiltre < 450.0f && dikey_hiz < -3.0f){
+		durum |= (1 << 6);
 		HAL_GPIO_WritePin(ANA_PA8_GPIO_Port, ANA_PA8_Pin, 1);
 		HAL_GPIO_WritePin(LED_PA6_GPIO_Port, LED_PA6_Pin, 1);
+		durum |= (1 << 7);
 	}
 }
 
@@ -117,14 +124,22 @@ void ledYakma(void) {
 		HAL_GPIO_TogglePin(LED_PA6_GPIO_Port, LED_PA6_Pin); // İnince led yakma.
 }
 
-void hizHesaplama(float z_ivme) {
-
+void hizHesaplama(void) {
     uint32_t guncel_zaman = HAL_GetTick();
     float dt = (guncel_zaman - gecmis_zaman) / 1000.0f;
-    gecmis_zaman = guncel_zaman;
-    if (dt > 0.5f) return;
 
-    dikey_hiz += (z_ivme * dt);
+    if (dt >= 0.1f) {
+        static float irtifa_eski = 0.0f;
+
+        if (irtifa_eski == 0.0f && irtifaFiltre > 0.0f) {
+            irtifa_eski = irtifaFiltre;
+        }
+
+        dikey_hiz = (irtifaFiltre - irtifa_eski) / dt;
+
+        irtifa_eski = irtifaFiltre;
+        gecmis_zaman = guncel_zaman;
+    }
 }
 
 float irtifaHesaplama(void) {

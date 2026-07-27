@@ -35,7 +35,7 @@ void drogueAcma(void); // Apogee bulunduysa paraşütü bununla aç.
 void anaParasutAcma(void); // Hız istenen duruma geldiyse ana paraşütü bununla aç.
 void ledYakma(void); // İniş tamamen yapıldıysa bununla led yak.
 void inisKontrol(void); // İnişin başarılı olup olmadığını kontrol eden fonksiyon.
-void hizHesaplama(float z_ivme);
+void hizHesaplama(void);
 float irtifaHesaplama(void);
 float ortFiltreleme(float ortGuncel, float ortFiltre); // Hareketli ortalama filtresi.
 void uartOkuma(void); // UART ile ekranımıza veri gönderen fonksiyon.

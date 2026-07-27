@@ -3,7 +3,7 @@
 
 #include "main.h"
 #include "newfunctions.h"
-
+#include "math.h"
 typedef enum {
 	MOD_UCUS,
 	MOD_SIT,
@@ -16,10 +16,10 @@ typedef union {
 } FloatDonusturucu;
 
 void modGuncelle(uint8_t komut);
-void durumGuncelle(void);
 void teleGonder(void);
 void fazGonder(void);
 void sahteAl(uint8_t *sahteTele);
+float yuzdeYuvarla(float deger);
 extern TestModlari aktifMod;
 
 #endif

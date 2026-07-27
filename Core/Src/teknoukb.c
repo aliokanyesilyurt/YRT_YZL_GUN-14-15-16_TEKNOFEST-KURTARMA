@@ -5,10 +5,10 @@ extern bno055_vector_t ivme;
 extern bno055_vector_t euler;
 extern float irtifaFiltre;
 extern float basincFiltre;
+extern uint16_t durum;
 // Aktif modu standart olarak uçuş seçtik.
 TestModlari aktifMod = MOD_UCUS;
-// SUT testindeki ışıkları yakmak için durum kullandık.
-uint16_t durum;
+
 uint8_t telePaket[36] = {0}; // Dışarıdan alacağımız global paketler.
 uint8_t fazPaket[6] = {0};
 
@@ -17,24 +17,13 @@ uint8_t footer1 = 0x0D;
 uint8_t footer2 = 0x0A;
 
 void modGuncelle(uint8_t komut){
+	if(komut == 0x20 || komut == 0x22) {
+	        osDelay(1000);
+	    }
+
 	if(komut == 0x20) aktifMod = MOD_SIT; // Komuta göre mod güncelleme.
 	else if(komut == 0x22) aktifMod = MOD_SUT;
 	else if(komut == 0x24) aktifMod = MOD_UCUS;
-}
-
-void durumGuncelle(void) {
-    durum = 0;
-
-    if (ucusDurumu >= FAZ_FIRLATMA) durum |= (1 << 0); // Durumları değiştirme fonksiyonu.
-    if (ucusDurumu >= FAZ_TIRMANIS) durum |= (1 << 1);
-    if (ucusDurumu >= FAZ_ARAYIS)   durum |= (1 << 4);
-
-    if (HAL_GPIO_ReadPin(TEPE_PA9_GPIO_Port, TEPE_PA9_Pin) == GPIO_PIN_SET){
-        durum |= (1 << 5);
-    }
-    if (HAL_GPIO_ReadPin(ANA_PA8_GPIO_Port, ANA_PA8_Pin) == GPIO_PIN_SET){
-        durum |= (1 << 7);
-    }
 }
 
 void teleGonder(void){
@@ -45,49 +34,49 @@ void teleGonder(void){
 // Değişkenlerimizi mecburen fonksiyon içinde seçtik hepsi kendi fonksiyonuna özel.
 	telePaket[index++] = header;
 // Union yöntemiyle burada çevirmeyi yapıyoruz.
-	cevirici.giren = irtifaFiltre;
+	cevirici.giren = yuzdeYuvarla(irtifaFiltre);
 	telePaket[index++] = cevirici.cikan[3];
 	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[1];
 	telePaket[index++] = cevirici.cikan[0];
 
-	cevirici.giren = basincFiltre;
+	cevirici.giren = yuzdeYuvarla(basincFiltre);
 	telePaket[index++] = cevirici.cikan[3];
 	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[1];
 	telePaket[index++] = cevirici.cikan[0];
 
-	cevirici.giren = ivme.x;
+	cevirici.giren = yuzdeYuvarla((float)ivme.x);
 	telePaket[index++] = cevirici.cikan[3];
 	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[1];
 	telePaket[index++] = cevirici.cikan[0];
 
-	cevirici.giren = ivme.y;
+	cevirici.giren = yuzdeYuvarla((float)ivme.y);
 	telePaket[index++] = cevirici.cikan[3];
 	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[1];
 	telePaket[index++] = cevirici.cikan[0];
 
-	cevirici.giren = ivme.z;
+	cevirici.giren = yuzdeYuvarla((float)ivme.z);
 	telePaket[index++] = cevirici.cikan[3];
 	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[1];
 	telePaket[index++] = cevirici.cikan[0];
 
-	cevirici.giren = euler.x;
+	cevirici.giren = yuzdeYuvarla((float)euler.x);
 	telePaket[index++] = cevirici.cikan[3];
 	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[1];
 	telePaket[index++] = cevirici.cikan[0];
 
-	cevirici.giren = euler.y;
+	cevirici.giren = yuzdeYuvarla((float)euler.y);
 	telePaket[index++] = cevirici.cikan[3];
 	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[1];
 	telePaket[index++] = cevirici.cikan[0];
 
-	cevirici.giren = euler.z;
+	cevirici.giren = yuzdeYuvarla((float)euler.z);
 	telePaket[index++] = cevirici.cikan[3];
 	telePaket[index++] = cevirici.cikan[2];
 	telePaket[index++] = cevirici.cikan[1];
@@ -107,7 +96,6 @@ void teleGonder(void){
 }
 
 void fazGonder(void){
-    durumGuncelle();
     uint8_t index = 0;
 // Güncellenen durumları göndermemizi sağlayan fonksiyon.
     fazPaket[index++] = 0xAA;
@@ -188,4 +176,8 @@ void sahteAl(uint8_t *sahteVeri){
     euler.z = tempFloat;
 
     osMutexRelease(SensorMutexHandle);
+}
+
+float yuzdeYuvarla(float deger){
+	return roundf(deger * 100.0f) / 100.0f;
 }

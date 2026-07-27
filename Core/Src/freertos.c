@@ -199,7 +199,7 @@ void stateMachineTask(void *argument)
 	  else if(aktifMod == MOD_SUT){}
 
 
-	  hizHesaplama(z_ivme);
+	  hizHesaplama();
 
 	  switch (ucusDurumu){ // Kurtarma algoritması, fonksiyonlar ve switch-case yapısıyla oluşturuldu.
 		  	  case FAZ_RAMPA: firlatma(); // Rampadan fırlatmayı tespit etme.
